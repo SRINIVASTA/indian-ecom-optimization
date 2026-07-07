@@ -90,7 +90,7 @@ with col2:
     b_eq = [festive_surge]
     
     res = linprog(c=costs_inr, A_eq=A_eq, b_eq=b_eq, 
-                  bounds=[(0, 800), (0, 1000), (0, 1200)], method='highs')
+                  bounds=[(0, 1000), (0, 1000), (0, 1200)], method='highs')
     
     if res.success:
         st.metric("Total Optimized Freight Expense", f"₹{res.fun:,.2f}")
@@ -117,8 +117,8 @@ gurugram_color, gurugram_icon = "green", "check-circle"
 bhiwandi_color, bhiwandi_icon = "green", "check-circle"
 sriperumbudur_color, sriperumbudur_icon = "green", "check-circle"
 
-# 📅 INTERACTIVE 4-SEASON SUPPLY CHAIN TIMELINE CHECKER (Month Arrays Filled)
-if current_month in: # Jan, Feb
+# 📅 FIXED MONTH ARRAYS FOR LOGICAL ROUTING
+if current_month in:  # January, February
     st.sidebar.warning("❄️ SEASONAL CONTEXT: Northern Fog & Winter Logjams")
     folium.Polygon(
         locations=[[30.00, 75.00], [30.00, 79.00], [27.00, 79.00], [27.00, 75.00]],
@@ -128,12 +128,12 @@ if current_month in: # Jan, Feb
     gurugram_status = "⚠️ WARNING: Northern Fog Delays Active" if not is_legacy_polling else "❌ CRITICAL: Data Stale + Winter Traffic Jam"
     gurugram_color, gurugram_icon = ("orange", "exclamation-triangle") if not is_legacy_polling else ("red", "times-circle")
 
-elif current_month in: # Mar, Apr, May
+elif current_month in:  # March, April, May
     st.sidebar.success("☀️ SEASONAL CONTEXT: Summer Demand Surge")
     gurugram_status = "⚡ OPTIMIZED: High Summer Throughput Active"
     bhiwandi_status = "⚡ OPTIMIZED: High Summer Throughput Active"
 
-elif current_month in: # Jun, Jul, Aug, Sep
+elif current_month in:  # June, July, August, September
     st.sidebar.error("🌧️ SEASONAL CONTEXT: Southwest Monsoon Disruption")
     folium.Polygon(
         locations=[[20.50, 72.50], [20.50, 74.50], [17.50, 74.50], [17.50, 72.50], [20.50, 72.50]],
@@ -143,7 +143,7 @@ elif current_month in: # Jun, Jul, Aug, Sep
     bhiwandi_status = "🔴 STATUS: Monsoon Intercept Active (Rerouting Enabled)" if not is_legacy_polling else "❌ CRITICAL: Monsoon Delay + Stale Cache Buffer"
     bhiwandi_color, bhiwandi_icon = ("red", "exclamation-triangle") if not is_legacy_polling else ("red", "times-circle")
 
-elif current_month in: # Oct, Nov, Dec
+elif current_month in:  # October, November, December
     st.sidebar.warning("🪔 SEASONAL CONTEXT: Festive Season Peak Traffic")
     folium.Polygon(
         locations=[[14.50, 78.50], [14.50, 81.50], [11.50, 81.50], [11.50, 78.50]],
