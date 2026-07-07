@@ -5,7 +5,7 @@ import folium
 from streamlit_folium import st_folium
 from scipy.optimize import linprog
 
-# 1. Page Configuration (Fixed AttributeError Typo)
+# 1. Page Configuration
 st.set_page_config(page_title="2026 India E-Com Grid", layout="wide")
 
 st.title("🇮🇳 India Territory Inventory Allocation Dashboard (2026 Grid)")
@@ -56,11 +56,12 @@ sync_lag_toggle = st.sidebar.selectbox("System Architecture Setting", ["200ms Ev
 # ==========================================
 col1, col2 = st.columns(2)
 
+# Determine the system lag state globally
+is_legacy_polling = "Legacy" in sync_lag_toggle
+
 with col1:
     st.subheader("🤖 Predictive Marketplace Risk Analytics")
-    test_lag = 900000 if "Legacy" in sync_lag_toggle else 200
-    
-    if test_lag > 200:
+    if is_legacy_polling:
         st.error(f"⚠️ Legacy Polling Active! Predicted Marketplace Cancellation Rate Profile: 9.76%")
         st.caption("Marketplace algorithms will penalize listing visibility due to high cancellation rates.")
     else:
@@ -70,23 +71,20 @@ with col1:
 with col2:
     st.subheader("🚚 Operations Research Freight Allocator")
     
-    # Calculate exact mean routing costs per node from baseline data
     costs_inr = [
         df[df['warehouse_id'] == 'WH-GURUGRAM-DEL']['shipping_cost_inr'].mean(),
         df[df['warehouse_id'] == 'WH-BHIWANDI-MUM']['shipping_cost_inr'].mean(),
         df[df['warehouse_id'] == 'WH-SRIPERUMBUDUR-CHN']['shipping_cost_inr'].mean()
     ]
     
-    # Correct equality matrices to ingest the sidebar slider input value dynamically
     A_eq = [[1, 1, 1]]
     b_eq = [festive_surge]
     
     res = linprog(c=costs_inr, A_eq=A_eq, b_eq=b_eq, 
-                  bounds=[(0, 1000), (0, 1000), (0, 1200)], method='highs')
+                  bounds=[(0, 800), (0, 1000), (0, 1200)], method='highs')
     
     if res.success:
         st.metric("Total Optimized Freight Expense", f"₹{res.fun:,.2f}")
-        # Extract individual matrix solution bounds safely
         gurugram_alloc = round(res.x[0])
         bhiwandi_alloc = round(res.x[1])
         sriperumbudur_alloc = round(res.x[2])
@@ -95,20 +93,46 @@ with col2:
         gurugram_alloc, bhiwandi_alloc, sriperumbudur_alloc = 0, 0, 0
 
 # ==========================================
-# 🗺️ LAYER 3: INTERACTIVE FOLIUM MAP LAYOUT
+# 🗺️ LAYER 3: DYNAMIC MAP GENERATOR (REACTIVE TO TOGGLE)
 # ==========================================
 st.subheader("🗺️ Live Geographic Fleet Footprint Matrix")
 
 india_dashboard = folium.Map(location=[21.00, 78.96], zoom_start=5, tiles="CartoDB dark_matter")
 
-# Dynamic allocation values pulled straight from our linear solver array results
+# Setup reactive text overlays based on user dropdown selection
+if is_legacy_polling:
+    gurugram_status = "⚠️ WARNING: Data Stale (15m Lag)<br>🚨 <b>Risk Layer:</b> 9.76% Cancellation Hazard"
+    bhiwandi_status = "❌ CRITICAL: Monsoon Delay + Stale Cache Buffer"
+    sriperumbudur_status = "⚠️ WARNING: Data Stale (15m Lag)<br>🚨 <b>Risk Layer:</b> 9.76% Cancellation Hazard"
+    
+    gurugram_color, gurugram_icon = "orange", "exclamation-triangle"
+    bhiwandi_color, bhiwandi_icon = "red", "times-circle"
+    sriperumbudur_color, sriperumbudur_icon = "orange", "exclamation-triangle"
+else:
+    gurugram_status = "🟢 STATUS: Healthy (Real-Time)<br>🔒 <b>Risk Layer:</b> 0.00% Inversion Safety"
+    bhiwandi_status = "🔴 STATUS: Monsoon Intercept Active (Rerouting Enabled)"
+    sriperumbudur_status = "🔵 STATUS: Absorbing Safety Load (Real-Time)"
+    
+    gurugram_color, gurugram_icon = "green", "check-circle"
+    bhiwandi_color, bhiwandi_icon = "red", "exclamation-triangle"
+    sriperumbudur_color, sriperumbudur_icon = "blue", "share-alt"
+
 hubs = {
-    "WH-GURUGRAM-DEL": {"loc": [28.4595, 77.0266], "color": "green", "alloc": f"{gurugram_alloc} Units"},
-    "WH-BHIWANDI-MUM": {"loc": [19.2813, 73.0483], "color": "red", "alloc": f"{bhiwandi_alloc} Units (⚠️ Monsoon Rerouting Active)"},
-    "WH-SRIPERUMBUDUR-CHN": {"loc": [12.9734, 79.9514], "color": "blue", "alloc": f"{sriperumbudur_alloc} Units"}
+    "WH-GURUGRAM-DEL": {
+        "loc": [28.4595, 77.0266], "color": gurugram_color, "icon": gurugram_icon,
+        "body": f"{gurugram_status}<br><b>📦 Allocation:</b> {gurugram_alloc} Units<br><b>💸 Cost Base:</b> ₹63.29/unit"
+    },
+    "WH-BHIWANDI-MUM": {
+        "loc": [19.2813, 73.0483], "color": bhiwandi_color, "icon": bhiwandi_icon,
+        "body": f"{bhiwandi_status}<br><b>📦 Allocation:</b> {bhiwandi_alloc} Units<br><b>💸 Cost Base:</b> ₹69.07/unit"
+    },
+    "WH-SRIPERUMBUDUR-CHN": {
+        "loc": [12.9734, 79.9514], "color": sriperumbudur_color, "icon": sriperumbudur_icon,
+        "body": f"{sriperumbudur_status}<br><b>📦 Allocation:</b> {sriperumbudur_alloc} Units<br><b>💸 Cost Base:</b> ₹74.69/unit"
+    }
 }
 
-# Add the Monsoon Disruption Region (Overlay Alert Zone)
+# Add the Monsoon Disruption Region
 folium.Polygon(
     locations=[[20.50, 72.50], [20.50, 74.50], [17.50, 74.50], [17.50, 72.50], [20.50, 72.50]],
     color="#FF3333", weight=2, fill=True, fill_color="#FF3333", fill_opacity=0.15,
@@ -121,11 +145,18 @@ corridor_lines = [hubs["WH-GURUGRAM-DEL"]["loc"], hubs["WH-BHIWANDI-MUM"]["loc"]
 folium.PolyLine(corridor_lines, color="#00FFCC", weight=2, opacity=0.6, dash_array="5, 10").add_to(india_dashboard)
 
 for name, info in hubs.items():
+    popup_style = f"""
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 240px;">
+        <h5 style="margin:0 0 5px 0; color:#111; font-weight:bold;">{name}</h5>
+        <p style="margin:0; font-size:12px; color:#333; line-height:1.4;">{info['body']}</p>
+    </div>
+    """
     folium.Marker(
         location=info["loc"],
-        tooltip=f"{name}: {info['alloc']}",
-        icon=folium.Icon(color=info["color"], icon="info-sign")
+        popup=folium.Popup(popup_style, max_width=270),
+        tooltip=f"Audit {name}",
+        icon=folium.Icon(color=info["color"], icon=info["icon"], prefix="fa")
     ).add_to(india_dashboard)
 
-# Render the interactive map directly inside the Streamlit web frame layout
+# Render map window
 st_folium(india_dashboard, width=1300, height=550)
