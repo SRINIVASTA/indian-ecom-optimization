@@ -3,7 +3,7 @@
 
 An enterprise-grade Decision Support System (DSS) engineered to tackle the 2026 supply chain battlefield. This system mitigates platform listing cancellation risks, minimizes interstate logistics freight costs, and automates multi-carrier risk routing across primary Indian commercial pipelines.
 
-🚀 **Live Interactive Web App:** [Deploying Live on Streamlit Cloud]
+🚀 **Live Interactive Web App:** [https://indian-ecom-optimization-fmyapptcl6yupz39pnstnft.streamlit.app/]
 
 ---
 
