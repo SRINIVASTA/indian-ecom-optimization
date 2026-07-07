@@ -4,6 +4,7 @@ import numpy as np
 import folium
 from streamlit_folium import st_folium
 from scipy.optimize import linprog
+import datetime
 
 # 1. Page Configuration
 st.set_page_config(page_title="2026 India E-Com Grid", layout="wide")
@@ -11,12 +12,19 @@ st.set_page_config(page_title="2026 India E-Com Grid", layout="wide")
 st.title("🇮🇳 India Territory Inventory Allocation Dashboard (2026 Grid)")
 st.caption("Applied Data Science, Operations Research & Risk Failover Pipeline")
 
+# Get live time variables
+current_date = datetime.date.today()
+current_month = current_date.month  # Numeric month (1-12)
+
 # ==========================================
-# 📊 LAYER 1: DATA ENGINE & SIMULATION
+# 📊 LAYER 1: CALENDAR-REACTIVE DATA ENGINE
 # ==========================================
 @st.cache_data
-def get_supply_chain_data():
-    np.random.seed(42)
+def get_supply_chain_data(date_string):
+    # Convert current date (e.g., "2026-07-07") into an integer seed so data updates daily
+    date_seed = int(date_string.replace("-", ""))
+    np.random.seed(date_seed)
+    
     records = 5000
     warehouses = ["WH-BHIWANDI-MUM", "WH-GURUGRAM-DEL", "WH-SRIPERUMBUDUR-CHN"]
     carriers = ["Delhivery", "Blue_Dart", "XpressBees", "India_Post"]
@@ -42,12 +50,15 @@ def get_supply_chain_data():
         })
     return pd.DataFrame(data)
 
-df = get_supply_chain_data()
+# Pass the date string to the cached function
+df = get_supply_chain_data(str(current_date))
 
 # ==========================================
 # 🛠️ STREAMLIT INTERACTIVE SIDEBAR CONTROLS
 # ==========================================
 st.sidebar.header("🕹️ Live Operational Variables")
+st.sidebar.info(f"📅 Current Date: {current_date.strftime('%B %d, %Y')}")
+
 festive_surge = st.sidebar.slider("Select Festive Surge Order Volume", 1000, 3000, 2500)
 sync_lag_toggle = st.sidebar.selectbox("System Architecture Setting", ["200ms Event Sync", "15-Min Legacy Polling"])
 
@@ -55,8 +66,6 @@ sync_lag_toggle = st.sidebar.selectbox("System Architecture Setting", ["200ms Ev
 # 🤖 LAYER 2: XGBOOST & OPTIMIZATION COMPUTATION
 # ==========================================
 col1, col2 = st.columns(2)
-
-# Determine the system lag state globally
 is_legacy_polling = "Legacy" in sync_lag_toggle
 
 with col1:
@@ -93,29 +102,69 @@ with col2:
         gurugram_alloc, bhiwandi_alloc, sriperumbudur_alloc = 0, 0, 0
 
 # ==========================================
-# 🗺️ LAYER 3: DYNAMIC MAP GENERATOR (REACTIVE TO TOGGLE)
+# 🗺️ LAYER 3: AUTOMATED ONE-YEAR SEASONS LOGIC
 # ==========================================
 st.subheader("🗺️ Live Geographic Fleet Footprint Matrix")
 
 india_dashboard = folium.Map(location=[21.00, 78.96], zoom_start=5, tiles="CartoDB dark_matter")
 
-# Setup reactive text overlays based on user dropdown selection
-if is_legacy_polling:
-    gurugram_status = "⚠️ WARNING: Data Stale (15m Lag)<br>🚨 <b>Risk Layer:</b> 9.76% Cancellation Hazard"
-    bhiwandi_status = "❌ CRITICAL: Monsoon Delay + Stale Cache Buffer"
-    sriperumbudur_status = "⚠️ WARNING: Data Stale (15m Lag)<br>🚨 <b>Risk Layer:</b> 9.76% Cancellation Hazard"
-    
-    gurugram_color, gurugram_icon = "orange", "exclamation-triangle"
-    bhiwandi_color, bhiwandi_icon = "red", "times-circle"
-    sriperumbudur_color, sriperumbudur_icon = "orange", "exclamation-triangle"
-else:
-    gurugram_status = "🟢 STATUS: Healthy (Real-Time)<br>🔒 <b>Risk Layer:</b> 0.00% Inversion Safety"
-    bhiwandi_status = "🔴 STATUS: Monsoon Intercept Active (Rerouting Enabled)"
-    sriperumbudur_status = "🔵 STATUS: Absorbing Safety Load (Real-Time)"
-    
-    gurugram_color, gurugram_icon = "green", "check-circle"
-    bhiwandi_color, bhiwandi_icon = "red", "exclamation-triangle"
+# Default Status Profiles
+gurugram_status = "🟢 STATUS: Healthy (Real-Time)"
+bhiwandi_status = "🟢 STATUS: Healthy (Real-Time)"
+sriperumbudur_status = "🟢 STATUS: Healthy (Real-Time)"
+
+gurugram_color, gurugram_icon = "green", "check-circle"
+bhiwandi_color, bhiwandi_icon = "green", "check-circle"
+sriperumbudur_color, sriperumbudur_icon = "green", "check-circle"
+
+# 📅 INTERACTIVE 4-SEASON SUPPLY CHAIN TIMELINE CHECKER
+if current_month in:
+    st.sidebar.warning("❄️ SEASONAL CONTEXT: Northern Fog & Winter Logjams")
+    # Draw Fog Zone over Delhi-NCR/Gurugram
+    folium.Polygon(
+        locations=[[30.00, 75.00], [30.00, 79.00], [27.00, 79.00], [27.00, 75.00]],
+        color="#FFFFFF", weight=1.5, fill=True, fill_color="#FFFFFF", fill_opacity=0.2,
+        tooltip="🌫️ Winter Fog Alert: Expect Flight & Truck Transit Logjams in North India"
+    ).add_to(india_dashboard)
+    gurugram_status = "⚠️ WARNING: Northern Fog Delays Active" if not is_legacy_polling else "❌ CRITICAL: Data Stale + Winter Traffic Jam"
+    gurugram_color, gurugram_icon = "orange" if not is_legacy_polling else "red", "exclamation-triangle"
+
+elif current_month in:
+    st.sidebar.success("☀️ SEASONAL CONTEXT: Summer Demand Surge")
+    gurugram_status = "⚡ OPTIMIZED: High Summer Throughput Active"
+    bhiwandi_status = "⚡ OPTIMIZED: High Summer Throughput Active"
+
+elif current_month in:
+    st.sidebar.error("🌧️ SEASONAL CONTEXT: Southwest Monsoon Disruption")
+    # Draw Monsoon Zone over Konkan/Mumbai-Bhiwandi Coast [dynamic-map]
+    folium.Polygon(
+        locations=[[20.50, 72.50], [20.50, 74.50], [17.50, 74.50], [17.50, 72.50], [20.50, 72.50]],
+        color="#FF3333", weight=2, fill=True, fill_color="#FF3333", fill_opacity=0.15,
+        tooltip="⛈️ Monsoon Alert: Active Flooding over Western Logistics Corridor"
+    ).add_to(india_dashboard)
+    bhiwandi_status = "🔴 STATUS: Monsoon Intercept Active (Rerouting Enabled)" if not is_legacy_polling else "❌ CRITICAL: Monsoon Delay + Stale Cache Buffer"
+    bhiwandi_color, bhiwandi_icon = "red", "exclamation-triangle" if not is_legacy_polling else "times-circle"
+
+elif current_month in:
+    st.sidebar.warning("🪔 SEASONAL CONTEXT: Festive Season Peak Traffic")
+    # Draw Peak Zone over Southern Electronics/Manufacturing Corridor
+    folium.Polygon(
+        locations=[[14.50, 78.50], [14.50, 81.50], [11.50, 81.50], [11.50, 78.50]],
+        color="#FFBB00", weight=1.5, fill=True, fill_color="#FFBB00", fill_opacity=0.2,
+        tooltip="🛍️ Festive Surge Alert: Southern Manufacturing Lines Maxed Out"
+    ).add_to(india_dashboard)
+    sriperumbudur_status = "🔵 STATUS: Absorbing Safety Load (Festive Peak Allocation)"
     sriperumbudur_color, sriperumbudur_icon = "blue", "share-alt"
+
+# Enforce architectural penalties if legacy 15-min sync lag option is enabled by user
+if is_legacy_polling:
+    if current_month not in: gurugram_color = "orange"
+    if current_month not in: bhiwandi_color = "orange"
+    if current_month not in: sriperumbudur_color = "orange"
+    
+    if "Data Stale" not in gurugram_status: gurugram_status = "⚠️ WARNING: Data Stale (15m Lag)"
+    if "Data Stale" not in bhiwandi_status: bhiwandi_status = "⚠️ WARNING: Data Stale (15m Lag)"
+    if "Data Stale" not in sriperumbudur_status: sriperumbudur_status = "⚠️ WARNING: Data Stale (15m Lag)"
 
 hubs = {
     "WH-GURUGRAM-DEL": {
@@ -132,13 +181,6 @@ hubs = {
     }
 }
 
-# Add the Monsoon Disruption Region
-folium.Polygon(
-    locations=[[20.50, 72.50], [20.50, 74.50], [17.50, 74.50], [17.50, 72.50], [20.50, 72.50]],
-    color="#FF3333", weight=2, fill=True, fill_color="#FF3333", fill_opacity=0.15,
-    tooltip="⛈️ ALERT: Monsoon Intercept Active over Western Logistics Hubs"
-).add_to(india_dashboard)
-
 # Connect corridors with high-contrast network lines
 corridor_lines = [hubs["WH-GURUGRAM-DEL"]["loc"], hubs["WH-BHIWANDI-MUM"]["loc"], 
                   hubs["WH-SRIPERUMBUDUR-CHN"]["loc"], hubs["WH-GURUGRAM-DEL"]["loc"]]
@@ -146,14 +188,14 @@ folium.PolyLine(corridor_lines, color="#00FFCC", weight=2, opacity=0.6, dash_arr
 
 for name, info in hubs.items():
     popup_style = f"""
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 240px;">
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; width: 250px;">
         <h5 style="margin:0 0 5px 0; color:#111; font-weight:bold;">{name}</h5>
         <p style="margin:0; font-size:12px; color:#333; line-height:1.4;">{info['body']}</p>
     </div>
     """
     folium.Marker(
         location=info["loc"],
-        popup=folium.Popup(popup_style, max_width=270),
+        popup=folium.Popup(popup_style, max_width=280),
         tooltip=f"Audit {name}",
         icon=folium.Icon(color=info["color"], icon=info["icon"], prefix="fa")
     ).add_to(india_dashboard)
