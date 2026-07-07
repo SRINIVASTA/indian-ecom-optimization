@@ -33,6 +33,8 @@ def get_supply_chain_data(date_string):
     for _ in range(records):
         wh = np.random.choice(warehouses)
         carrier = np.random.choice(carriers)
+        
+        # Explicit lists for item selection matrix mapping
         ordered_qty = int(np.random.choice([1, 2, 3, 4], p=[0.7, 0.2, 0.07, 0.03]))
         current_stock = np.random.randint(0, 10)
         system_lag_ms = int(np.random.choice([200, 900000], p=[0.6, 0.4]))
@@ -117,8 +119,8 @@ gurugram_color, gurugram_icon = "green", "check-circle"
 bhiwandi_color, bhiwandi_icon = "green", "check-circle"
 sriperumbudur_color, sriperumbudur_icon = "green", "check-circle"
 
-# 📅 FIXED MONTH ARRAYS FOR LOGICAL ROUTING
-if current_month in:  # January, February
+# 📅 AUTOMATED COMPARISON LOGIC (Bypasses empty array rendering bugs)
+if current_month == 1 or current_month == 2:  # Jan, Feb
     st.sidebar.warning("❄️ SEASONAL CONTEXT: Northern Fog & Winter Logjams")
     folium.Polygon(
         locations=[[30.00, 75.00], [30.00, 79.00], [27.00, 79.00], [27.00, 75.00]],
@@ -128,12 +130,12 @@ if current_month in:  # January, February
     gurugram_status = "⚠️ WARNING: Northern Fog Delays Active" if not is_legacy_polling else "❌ CRITICAL: Data Stale + Winter Traffic Jam"
     gurugram_color, gurugram_icon = ("orange", "exclamation-triangle") if not is_legacy_polling else ("red", "times-circle")
 
-elif current_month in:  # March, April, May
+elif current_month >= 3 and current_month <= 5:  # Mar, Apr, May
     st.sidebar.success("☀️ SEASONAL CONTEXT: Summer Demand Surge")
     gurugram_status = "⚡ OPTIMIZED: High Summer Throughput Active"
     bhiwandi_status = "⚡ OPTIMIZED: High Summer Throughput Active"
 
-elif current_month in:  # June, July, August, September
+elif current_month >= 6 and current_month <= 9:  # Jun, Jul, Aug, Sep
     st.sidebar.error("🌧️ SEASONAL CONTEXT: Southwest Monsoon Disruption")
     folium.Polygon(
         locations=[[20.50, 72.50], [20.50, 74.50], [17.50, 74.50], [17.50, 72.50], [20.50, 72.50]],
@@ -143,7 +145,7 @@ elif current_month in:  # June, July, August, September
     bhiwandi_status = "🔴 STATUS: Monsoon Intercept Active (Rerouting Enabled)" if not is_legacy_polling else "❌ CRITICAL: Monsoon Delay + Stale Cache Buffer"
     bhiwandi_color, bhiwandi_icon = ("red", "exclamation-triangle") if not is_legacy_polling else ("red", "times-circle")
 
-elif current_month in:  # October, November, December
+elif current_month >= 10 and current_month <= 12:  # Oct, Nov, Dec
     st.sidebar.warning("🪔 SEASONAL CONTEXT: Festive Season Peak Traffic")
     folium.Polygon(
         locations=[[14.50, 78.50], [14.50, 81.50], [11.50, 81.50], [11.50, 78.50]],
@@ -155,9 +157,9 @@ elif current_month in:  # October, November, December
 
 # Enforce architectural penalties if legacy 15-min sync lag option is enabled by user
 if is_legacy_polling:
-    if current_month not in: gurugram_color = "orange"
-    if current_month not in: bhiwandi_color = "orange"
-    if current_month not in: sriperumbudur_color = "orange"
+    if not (current_month == 1 or current_month == 2): gurugram_color = "orange"
+    if not (current_month >= 6 and current_month <= 9): bhiwandi_color = "orange"
+    if not (current_month >= 10 and current_month <= 12): sriperumbudur_color = "orange"
     
     if "Data Stale" not in gurugram_status: gurugram_status = "⚠️ WARNING: Data Stale (15m Lag)"
     if "Data Stale" not in bhiwandi_status: bhiwandi_status = "⚠️ WARNING: Data Stale (15m Lag)"
