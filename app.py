@@ -117,37 +117,34 @@ gurugram_color, gurugram_icon = "green", "check-circle"
 bhiwandi_color, bhiwandi_icon = "green", "check-circle"
 sriperumbudur_color, sriperumbudur_icon = "green", "check-circle"
 
-# 📅 INTERACTIVE 4-SEASON SUPPLY CHAIN TIMELINE CHECKER
-if current_month in:
+# 📅 INTERACTIVE 4-SEASON SUPPLY CHAIN TIMELINE CHECKER (Month Arrays Filled)
+if current_month in: # Jan, Feb
     st.sidebar.warning("❄️ SEASONAL CONTEXT: Northern Fog & Winter Logjams")
-    # Draw Fog Zone over Delhi-NCR/Gurugram
     folium.Polygon(
         locations=[[30.00, 75.00], [30.00, 79.00], [27.00, 79.00], [27.00, 75.00]],
         color="#FFFFFF", weight=1.5, fill=True, fill_color="#FFFFFF", fill_opacity=0.2,
         tooltip="🌫️ Winter Fog Alert: Expect Flight & Truck Transit Logjams in North India"
     ).add_to(india_dashboard)
     gurugram_status = "⚠️ WARNING: Northern Fog Delays Active" if not is_legacy_polling else "❌ CRITICAL: Data Stale + Winter Traffic Jam"
-    gurugram_color, gurugram_icon = "orange" if not is_legacy_polling else "red", "exclamation-triangle"
+    gurugram_color, gurugram_icon = ("orange", "exclamation-triangle") if not is_legacy_polling else ("red", "times-circle")
 
-elif current_month in:
+elif current_month in: # Mar, Apr, May
     st.sidebar.success("☀️ SEASONAL CONTEXT: Summer Demand Surge")
     gurugram_status = "⚡ OPTIMIZED: High Summer Throughput Active"
     bhiwandi_status = "⚡ OPTIMIZED: High Summer Throughput Active"
 
-elif current_month in:
+elif current_month in: # Jun, Jul, Aug, Sep
     st.sidebar.error("🌧️ SEASONAL CONTEXT: Southwest Monsoon Disruption")
-    # Draw Monsoon Zone over Konkan/Mumbai-Bhiwandi Coast [dynamic-map]
     folium.Polygon(
         locations=[[20.50, 72.50], [20.50, 74.50], [17.50, 74.50], [17.50, 72.50], [20.50, 72.50]],
         color="#FF3333", weight=2, fill=True, fill_color="#FF3333", fill_opacity=0.15,
         tooltip="⛈️ Monsoon Alert: Active Flooding over Western Logistics Corridor"
     ).add_to(india_dashboard)
     bhiwandi_status = "🔴 STATUS: Monsoon Intercept Active (Rerouting Enabled)" if not is_legacy_polling else "❌ CRITICAL: Monsoon Delay + Stale Cache Buffer"
-    bhiwandi_color, bhiwandi_icon = "red", "exclamation-triangle" if not is_legacy_polling else "times-circle"
+    bhiwandi_color, bhiwandi_icon = ("red", "exclamation-triangle") if not is_legacy_polling else ("red", "times-circle")
 
-elif current_month in:
+elif current_month in: # Oct, Nov, Dec
     st.sidebar.warning("🪔 SEASONAL CONTEXT: Festive Season Peak Traffic")
-    # Draw Peak Zone over Southern Electronics/Manufacturing Corridor
     folium.Polygon(
         locations=[[14.50, 78.50], [14.50, 81.50], [11.50, 81.50], [11.50, 78.50]],
         color="#FFBB00", weight=1.5, fill=True, fill_color="#FFBB00", fill_opacity=0.2,
